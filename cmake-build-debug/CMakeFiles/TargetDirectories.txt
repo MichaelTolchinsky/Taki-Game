@@ -1,0 +1,3 @@
+/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles/TakiProject.dir
