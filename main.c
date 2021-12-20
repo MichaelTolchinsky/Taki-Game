@@ -1,17 +1,23 @@
+#define _CRT_SECURE_NO_WARNINGS
 /*
  * Michael Tolchinsky 321223950
- * TODO: build this fucking taki game
  */
-#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> // in order to use the "rand" and "srand" functions
 #include <time.h>	// in order to use "time" function
+#include <stdbool.h>
 
 #define RED 'R' // 1
 #define BLUE 'B' // 2
 #define GREEN 'G' // 3
 #define YELLOW 'Y' // 4
+#define PLUS '+' // '+' represented by number 10
+#define STOP "STOP" // "STOP" represented by number 11
+#define CHANGE_DIR "<->" // "<->" represented by number 12
+#define TAKI "TAKI" // "<->" represented by number 13
+#define COLOR "COLOR" // "<->" represented by number 14
 
 typedef struct card {
     char value[10]; // (1-9 ,+, STOP, <->,COLOR, TAKI )
@@ -27,8 +33,10 @@ void printWelcomeMessage();
 int nofPlayersInput();
 void playersNameInput(Player *players, int nofPlayers);
 int getRandomNumber(int from,int to);
+void generateRandomCard(Card *card, bool isUpperCard);
+void printCard(Card card);
 
-void getStartCard(Card *startCard);
+void initGame(Player *players, int nofPlayers, Card *upperCard);
 
 void main() {
     int nofPlayers;
@@ -38,11 +46,30 @@ void main() {
     printWelcomeMessage();
     nofPlayers = nofPlayersInput();
     playersNameInput(players,nofPlayers);
-    getStartCard(&upperCard);
-    //printf("%c %c",upperCard.value[0],upperCard.color);
+    initGame(players,nofPlayers,&upperCard);
+
+
 }
 
-void getStartCard(Card *startCard) {
+void initGame(Player *players, int nofPlayers, Card *upperCard) {
+    generateRandomCard(upperCard, true);
+
+    for (int i = 0; i < nofPlayers; i++) {
+        for (int j = 0; j < 4; j++) {
+            generateRandomCard(&((players+i)->cards[j]),false);
+        }
+    }
+}
+
+void printCard(Card card) {
+
+    for (int i = 0; i < 9; i++) {
+        printf("*");
+    }
+    printf("\n");
+}
+
+void generateRandomCard(Card *card, bool isUpperCard) {
     int num;
     char cardColor;
 
@@ -64,26 +91,51 @@ void getStartCard(Card *startCard) {
         case 4:
             cardColor = YELLOW;
             break;
+
+        default:
+            break;
     }
 
-    // get card number between 1-9
-    num = getRandomNumber(1,9);
-    startCard->value[0]=num + '0';
-    startCard->color = cardColor;
+    if(isUpperCard){
+        // get card number between 1-9
+        num = getRandomNumber(1,9);
+        card->value[0]= num + '0';
+    } else {
+        // get card number between 1-14
+        num = getRandomNumber(1,14);
+        if(num > 9){
+            switch (num) {
+                case 10:
+                    card->value[0] = PLUS;
+                    break;
+                case 11:
+                    strcpy(card->value ,STOP);
+                    break;
+                case 12:
+                    strcpy(card->value,CHANGE_DIR);
+                    break;
+                case 13:
+                    strcpy(card->value,COLOR);
+                    break;
+                case 14:
+                    strcpy(card->value,TAKI);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            card->value[0]= num + '0';
+        }
+    }
+    if(num == 13){
+        card->color = '\0';
+    } else {
+        card->color = cardColor;
+    }
 }
 
 int getRandomNumber(int from,int to) {
-    // In order to generate random numbers, we use the srand function only once,
-    // and then use the rand function for each random number we want to generate.
     int num;
-    // srand(x) function call (for an integer x) is used to set the starting value (seed)
-    // for generating a sequence of random integer values.
-    // When we use srand(x) (for an integer x), we'll get the same random values
-    // in each program run (therefore not so random).
-    // srand(time(NULL)) function call makes use of the computer's internal clock
-    // to control the choice of the seed. Since time is continually changing,
-    // the seed is forever changing. Therefore we'll get different sequence of random
-    // values in each program run.
     srand(time(NULL));
     // rand() function call returns a random positive integer
     num = from + rand() % to;
@@ -101,7 +153,6 @@ int nofPlayersInput() {
     int players;
     printf("Please enter the number of players: \n");
     scanf("%d", &players);
-
     return players;
 }
 
