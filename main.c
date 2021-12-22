@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h> // in order to use the "rand" and "srand" functions
 #include <time.h>	// in order to use "time" function
-#include <stdbool.h>
 
 #define RED 'R' // 1
 #define BLUE 'B' // 2
@@ -20,16 +20,17 @@
 #define TAKI "TAKI" // "TAKI" represented by number 14
 #define CARD_COLS 9
 #define CARD_ROWS 6
+#define MAX_NAME_LEN 20
 
 typedef struct card {
-    char value[10]; // (1-9 ,+, STOP, <->,COLOR, TAKI )
+    //char value[10]; // (1-9 ,+, STOP, <->,COLOR, TAKI )
+    int value;
     char color;
 } Card;
 
 typedef struct player {
-    char name[20];
-    // TODO: change size to 4
-    // maybe add int nofCards as logical size??
+    char name[MAX_NAME_LEN];
+    int nofCards;
     Card cards[50];
 } Player;
 
@@ -41,10 +42,12 @@ void generateRandomCard(Card *card, bool isUpperCard);
 void printCard(Card card);
 void initGame(Player *players, int nofPlayers, Card *upperCard);
 char getColor(int num);
-void getSpecialCardValue(Card *card, int num);
+void printCardValue(Card card);
 void playGame(Player *players, int nofPlayers, Card *upperCard);
 void printUpperCard(Card *upperCard);
+void playerActionInput(int *playerAction, int nofCards);
 
+void nextPlayerTurn(int *currentTurn, int nofPlayers);
 
 void main() {
     int nofPlayers;
@@ -60,30 +63,50 @@ void main() {
     initGame(players,nofPlayers,&upperCard);
     playGame(players,nofPlayers,&upperCard);
 
-    // maybe move to clean function later
+    // move to clean function later
     free(players);
 }
 
+// separate to helper functions
 void playGame(Player *players, int nofPlayers, Card *upperCard) {
-    bool isWinner = false;
+    bool isWinner = false,isValidMove = false;
     int turn = 0,playerAction;
 
     while(!isWinner){
-        printUpperCard(upperCard);
-        for (; turn < nofPlayers; turn++) {
+        for (; turn < nofPlayers;) {
+            printUpperCard(upperCard);
             printf("%s's turn:\n\n", (players+turn)->name);
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < (players+turn)->nofCards; i++) {
                 printf("Card #%d:\n",i+1);
                 printCard((players+turn)->cards[i]);
             }
 
-            // TODO: move this to function
-            printf("Please enter 0 if you want to take a card from the deck\n"
-                   "or 1-4 if you want to put one of your cards in the middle:\n");
-            scanf("%d", &playerAction);
+            while(!isValidMove){
+                playerActionInput(&playerAction,(players+turn)->nofCards);
+                if(playerAction == 0){
+                    generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
+                    nextPlayerTurn(&turn,nofPlayers);
+                    isValidMove = !isValidMove;
+                }
+                // TODO: else check if user can play with chosen card if not show invalid card message
+                else{
+                    //if the card is valid (simple check)
+                    if ((players+turn)->cards[playerAction-1].color == upperCard->color || (players+turn)->cards[playerAction-1].value == upperCard->value){
+                        // update cards after validity check
+                        *upperCard = (players+turn)->cards[playerAction-1];
+                        (players+turn)->cards[playerAction-1] = (players+turn)->cards[(players+turn)->nofCards-1];
+                        (players+turn)->nofCards--;
 
-            // TODO: if playerAction == 0 dynamicaly add memory to cards array for new card and check for success, then generate the new card
-            // TODO: else check if user can play with chosen card if not show invalid card message
+                        nextPlayerTurn(&turn,nofPlayers);
+                        isValidMove = !isValidMove;
+                    } else {
+                        printf("Invalid choice! Try again.\n");
+                    }
+                }
+                //if card is not valid show message
+            }
+            isValidMove = !isValidMove;
+
         }
 
 
@@ -93,6 +116,28 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
     }
 }
 
+void nextPlayerTurn(int *currentTurn, int nofPlayers) {
+    if(*currentTurn < nofPlayers-1){
+        *currentTurn += 1;
+    } else {
+        *currentTurn = 0;
+    }
+}
+
+void playerActionInput(int *playerAction, int nofCards) {
+    int number;
+    printf("Please enter 0 if you want to take a card from the deck\n"
+           "or 1-%d if you want to put one of your cards in the middle:\n",nofCards);
+    scanf("%d", &number);
+
+    while (number < 0 || number > nofCards){
+        printf("Invalid choice! Try again.\n");
+        printf("Please enter 0 if you want to take a card from the deck\n"
+               "or 1-%d if you want to put one of your cards in the middle:\n",nofCards);
+        scanf("%d", &number);
+    }
+    *playerAction = number;
+}
 
 void printUpperCard(Card *upperCard) {
     printf("\nUpper card:\n");
@@ -108,7 +153,7 @@ void printCard(Card card) {
             if (i==1 || i== CARD_ROWS || j==1 || j== CARD_COLS){
                 printf("*");
             } else if(i == 3 && j == 5){
-                printf("%s", card.value);
+                    printCardValue(card);
             } else if(i == 4 && j == 5){
                 printf("%c", card.color);
             }
@@ -125,8 +170,9 @@ void initGame(Player *players, int nofPlayers, Card *upperCard) {
     generateRandomCard(upperCard, true);
 
     for (int i = 0; i < nofPlayers; i++) {
+        (players+i)->nofCards = 4;
         // TODO: for each player malloc size of cards array to 4??
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < (players+i)->nofCards; j++) {
             generateRandomCard(&(players+i)->cards[j],false);
         }
     }
@@ -138,16 +184,11 @@ void generateRandomCard(Card *card, bool isUpperCard) {
     if(isUpperCard){
         // get card number between 1-9
         num = getRandomNumber(1,9);
-        card->value[0]= num + '0';
     } else {
         // get card number between 1-14
         num = getRandomNumber(1,14);
-        if(num > 9){
-            getSpecialCardValue(card, num);
-        } else {
-            card->value[0]= num + '0';
-        }
     }
+    card->value = num;
 
     if(num != 13){
         // get card color
@@ -156,25 +197,35 @@ void generateRandomCard(Card *card, bool isUpperCard) {
     }
 }
 
-void getSpecialCardValue(Card *card, int num) {
-    switch (num) {
+void printCardValue(Card card) {
+    switch (card.value) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            printf("%d", card.value);
+            break;
         case 10:
-            card->value[0] = PLUS;
+            printf("%c",PLUS);
             break;
         case 11:
-            strcpy(card->value ,STOP);
+            printf(STOP);
             break;
         case 12:
-            strcpy(card->value,CHANGE_DIR);
+            printf(CHANGE_DIR);
             break;
         case 13:
-            strcpy(card->value,COLOR);
+            printf(COLOR);
             break;
         case 14:
-            strcpy(card->value,TAKI);
+            printf(TAKI);
             break;
         default:
-            card->value[0] = '\0';
             break;
     }
 }
