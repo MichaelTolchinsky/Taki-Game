@@ -46,8 +46,11 @@ void printCardValue(Card card);
 void playGame(Player *players, int nofPlayers, Card *upperCard);
 void printUpperCard(Card *upperCard);
 void playerActionInput(int *playerAction, int nofCards);
-
 void nextPlayerTurn(int *currentTurn, int nofPlayers);
+void printPlayerHand(Player *player);
+void playCard(Player *players, Card *upperCard, int turn, int playerAction);
+void checkForWinner(Player *player, bool *isWinner);
+void chooseNewColor(char *color);
 
 void main() {
     int nofPlayers;
@@ -63,11 +66,11 @@ void main() {
     initGame(players,nofPlayers,&upperCard);
     playGame(players,nofPlayers,&upperCard);
 
-    // move to clean function later
+    // move to clean function later if needed
     free(players);
 }
 
-// separate to helper functions
+// separate to helper functions -- make this shorter
 void playGame(Player *players, int nofPlayers, Card *upperCard) {
     bool isWinner = false,isValidMove = false;
     int turn = 0,playerAction;
@@ -75,11 +78,7 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
     while(!isWinner){
         for (; turn < nofPlayers;) {
             printUpperCard(upperCard);
-            printf("%s's turn:\n\n", (players+turn)->name);
-            for (int i = 0; i < (players+turn)->nofCards; i++) {
-                printf("Card #%d:\n",i+1);
-                printCard((players+turn)->cards[i]);
-            }
+            printPlayerHand(players + turn);
 
             while(!isValidMove){
                 playerActionInput(&playerAction,(players+turn)->nofCards);
@@ -88,31 +87,69 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                     nextPlayerTurn(&turn,nofPlayers);
                     isValidMove = !isValidMove;
                 }
-                // TODO: else check if user can play with chosen card if not show invalid card message
                 else{
-                    //if the card is valid (simple check)
-                    if ((players+turn)->cards[playerAction-1].color == upperCard->color || (players+turn)->cards[playerAction-1].value == upperCard->value){
+                    if (((players+turn)->cards[playerAction-1].value >= 1 &&
+                        (players+turn)->cards[playerAction-1].value <= 9) && (
+                        (players+turn)->cards[playerAction-1].color == upperCard->color ||
+                        (players+turn)->cards[playerAction-1].value == upperCard->value)){
                         // update cards after validity check
-                        *upperCard = (players+turn)->cards[playerAction-1];
-                        (players+turn)->cards[playerAction-1] = (players+turn)->cards[(players+turn)->nofCards-1];
-                        (players+turn)->nofCards--;
-
+                        playCard(players, upperCard, turn, playerAction);
                         nextPlayerTurn(&turn,nofPlayers);
                         isValidMove = !isValidMove;
-                    } else {
+                    } else if((players+turn)->cards[playerAction-1].value == 10 &&
+                             (players+turn)->cards[playerAction-1].color == upperCard->color){
+                        playCard(players, upperCard, turn, playerAction);
+
+                        if((players+turn)->nofCards == 1){
+                            generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
+                        }
+                        isValidMove = !isValidMove;
+                    }else if((players+turn)->cards[playerAction-1].value == 13){
+                        chooseNewColor(&(players+turn)->cards[playerAction-1].color);
+                        playCard(players, upperCard, turn, playerAction);
+                        nextPlayerTurn(&turn,nofPlayers);
+                        isValidMove = !isValidMove;
+                    }
+                    else {
                         printf("Invalid choice! Try again.\n");
                     }
                 }
-                //if card is not valid show message
             }
             isValidMove = !isValidMove;
-
+            checkForWinner(players, &isWinner);
         }
+    }
+}
 
+void chooseNewColor(char *color) {
+    int colorNum;
+    printf("Please enter your color choice:\n"
+           "1 - Yellow\n"
+           "2 - Red\n"
+           "3 - Blue\n"
+           "4 - Green\n");
+    scanf("%d",&colorNum);
+    *color = getColor(colorNum);
+}
 
+void checkForWinner(Player *player, bool *isWinner) {
+    if((player)->nofCards == 0){
+        printf("The winner is... %s! Congratulations!",(player)->name);
+        *isWinner=!isWinner;
+    }
+}
 
-        // TODO change to good logic
-        isWinner=!isWinner;
+void playCard(Player *players, Card *upperCard, int turn, int playerAction) {
+    *upperCard = (players + turn)->cards[playerAction - 1];
+    (players+turn)->cards[playerAction-1] = (players+turn)->cards[(players+turn)->nofCards-1];
+    (players+turn)->nofCards--;
+}
+
+void printPlayerHand(Player *player) {
+    printf("%s's turn:\n\n", (player)->name);
+    for (int i = 0; i < (player)->nofCards; i++) {
+        printf("Card #%d:\n",i+1);
+        printCard((player)->cards[i]);
     }
 }
 
@@ -235,19 +272,19 @@ char getColor(int num) {
 
     switch (num) {
         case 1:
-            cardColor = RED;
+            cardColor = YELLOW;
             break;
 
         case 2:
-            cardColor = BLUE;
+            cardColor = RED;
             break;
 
         case 3:
-            cardColor = GREEN;
+            cardColor = BLUE;
             break;
 
         case 4:
-            cardColor = YELLOW;
+            cardColor = GREEN;
             break;
 
         default:
