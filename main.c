@@ -16,7 +16,7 @@
 #define PLUS '+' // '+' represented by number 10
 #define STOP "STOP" // "STOP" represented by number 11
 #define CHANGE_DIR "<->" // "<->" represented by number 12
-#define COLOR "COLOR" // "<->" represented by number 13
+#define COLOR "COLOR" // "COLOR" represented by number 13
 #define TAKI "TAKI" // "TAKI" represented by number 14
 #define CARD_COLS 9
 #define CARD_ROWS 6
@@ -45,12 +45,14 @@ char getColor(int num);
 void printCardValue(Card card);
 void playGame(Player *players, int nofPlayers, Card *upperCard);
 void printUpperCard(Card *upperCard);
-void playerActionInput(int *playerAction, int nofCards);
-void nextPlayerTurn(int *currentTurn, int nofPlayers);
+void playerActionInput(int *playerAction, int nofCards, bool *isTaki);
+void nextPlayerTurn(int *currentTurn, int nofPlayers, bool isTaki, bool reverse);
 void printPlayerHand(Player *player);
 void playCard(Player *players, Card *upperCard, int turn, int playerAction);
 void checkForWinner(Player *player, bool *isWinner);
 void chooseNewColor(char *color);
+
+int cardInput(int nofCards, bool *isTaki);
 
 void main() {
     int nofPlayers;
@@ -70,9 +72,9 @@ void main() {
     free(players);
 }
 
-// separate to helper functions -- make this shorter
+// separate to helper functions == make this shorter
 void playGame(Player *players, int nofPlayers, Card *upperCard) {
-    bool isWinner = false,isValidMove = false;
+    bool isWinner = false,isValidMove = false,isTaki=false,isReverseTurns = false;
     int turn = 0,playerAction;
 
     while(!isWinner){
@@ -81,11 +83,11 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
             printPlayerHand(players + turn);
 
             while(!isValidMove){
-                playerActionInput(&playerAction,(players+turn)->nofCards);
+                playerActionInput(&playerAction, (players + turn)->nofCards, &isTaki);
                 if(playerAction == 0){
-                    generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
-                    nextPlayerTurn(&turn,nofPlayers);
-                    isValidMove = !isValidMove;
+                        generateRandomCard(&((players + turn)->cards[((players + turn)->nofCards)++]), false);
+                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                        isValidMove = !isValidMove;
                 }
                 else{
                     if (((players+turn)->cards[playerAction-1].value >= 1 &&
@@ -94,8 +96,9 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                         (players+turn)->cards[playerAction-1].value == upperCard->value)){
                         // update cards after validity check
                         playCard(players, upperCard, turn, playerAction);
-                        nextPlayerTurn(&turn,nofPlayers);
+                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
                         isValidMove = !isValidMove;
+                        // plus
                     } else if((players+turn)->cards[playerAction-1].value == 10 &&
                              (players+turn)->cards[playerAction-1].color == upperCard->color){
                         playCard(players, upperCard, turn, playerAction);
@@ -104,10 +107,38 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                             generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
                         }
                         isValidMove = !isValidMove;
-                    }else if((players+turn)->cards[playerAction-1].value == 13){
+                        // stop card
+                    } else if((players+turn)->cards[playerAction-1].value == 11 &&
+                            (players+turn)->cards[playerAction-1].color == upperCard->color){
+                        if(nofPlayers == 2 && (players+turn)->nofCards == 1){
+                            generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
+                        }
+                        playCard(players,upperCard,turn,playerAction);
+                        turn++;
+                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                        isValidMove = !isValidMove;
+                    }
+                    // change-dir
+                    else if((players+turn)->cards[playerAction-1].value == 12 &&
+                            (players+turn)->cards[playerAction-1].color == upperCard->color){
+                        playCard(players,upperCard,turn,playerAction);
+                        // TODO: change game direction
+                        isReverseTurns = !isReverseTurns;
+                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                        isValidMove = !isValidMove;
+                    }
+                    // change color
+                    else if((players+turn)->cards[playerAction-1].value == 13){
+                        isTaki = false;
                         chooseNewColor(&(players+turn)->cards[playerAction-1].color);
                         playCard(players, upperCard, turn, playerAction);
-                        nextPlayerTurn(&turn,nofPlayers);
+                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                        isValidMove = !isValidMove;
+                        // Taki card TODO: needs to be improved
+                    }else if ((players+turn)->cards[playerAction-1].value == 14 &&
+                            (players+turn)->cards[playerAction-1].color == upperCard->color){
+                        isTaki = true;
+                        playCard(players, upperCard, turn, playerAction);
                         isValidMove = !isValidMove;
                     }
                     else {
@@ -153,27 +184,51 @@ void printPlayerHand(Player *player) {
     }
 }
 
-void nextPlayerTurn(int *currentTurn, int nofPlayers) {
-    if(*currentTurn < nofPlayers-1){
-        *currentTurn += 1;
+void nextPlayerTurn(int *currentTurn, int nofPlayers, bool isTaki, bool reverse) {
+    if(isTaki) return;
+
+    if(reverse){
+        if(*currentTurn >= 1){
+            *currentTurn -= 1;
+        } else {
+            *currentTurn = nofPlayers-1;
+        }
     } else {
-        *currentTurn = 0;
+        if(*currentTurn < nofPlayers-1){
+            *currentTurn += 1;
+        } else {
+            *currentTurn = 0;
+        }
     }
+
 }
 
-void playerActionInput(int *playerAction, int nofCards) {
+void playerActionInput(int *playerAction, int nofCards, bool *isTaki) {
     int number;
-    printf("Please enter 0 if you want to take a card from the deck\n"
-           "or 1-%d if you want to put one of your cards in the middle:\n",nofCards);
-    scanf("%d", &number);
+    number = cardInput(nofCards, isTaki);
 
     while (number < 0 || number > nofCards){
         printf("Invalid choice! Try again.\n");
-        printf("Please enter 0 if you want to take a card from the deck\n"
-               "or 1-%d if you want to put one of your cards in the middle:\n",nofCards);
-        scanf("%d", &number);
+        number = cardInput(nofCards, isTaki);
     }
     *playerAction = number;
+}
+
+int cardInput(int nofCards, bool *isTaki) {
+    int number;
+    if(!*isTaki){
+        printf("Please enter 0 if you want to take a card from the deck\n");
+    } else {
+        printf("Please enter 0 if you want to finish your turn\n");
+    }
+    printf("or 1-%d if you want to put one of your cards in the middle:\n", nofCards);
+    scanf("%d", &number);
+
+    if(*isTaki && number == 0) {
+        *isTaki = !*isTaki;
+    }
+
+    return number;
 }
 
 void printUpperCard(Card *upperCard) {
