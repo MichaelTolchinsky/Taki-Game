@@ -18,8 +18,8 @@
 #define CHANGE_DIR "<->" // "<->" represented by number 12
 #define COLOR "COLOR" // "COLOR" represented by number 13
 #define TAKI "TAKI" // "TAKI" represented by number 14
-#define CARD_COLS 9
-#define CARD_ROWS 6
+#define CARD_COLS 9 // number of cols * to print card
+#define CARD_ROWS 6// number of rows * to print card
 #define MAX_NAME_LEN 20 // max name length
 
 typedef struct card {
@@ -30,7 +30,8 @@ typedef struct card {
 typedef struct player {
     char name[MAX_NAME_LEN];
     int nofCards;
-    Card cards[50];
+    int pySizeCard;
+    Card *cards;
 } Player;
 
 void printWelcomeMessage();
@@ -53,6 +54,12 @@ void checkForWinner(Player *player, bool *isWinner);
 void chooseNewColor(char *color);
 
 void validatePlayersMemAlloc(Player *players);
+
+void validateCardsMemAlloc(Card *cards);
+
+void memoryAllocFail();
+
+void TakeCard(Player *player);
 
 void main() {
     int nofPlayers;
@@ -83,8 +90,8 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                 playerActionInput(&playerAction, (players + turn)->nofCards, isTaki);
 
                 if(playerAction == 0){
-                        generateRandomCard(&((players + turn)->cards[((players + turn)->nofCards)++]), false);
-                        nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                    TakeCard(players+turn);
+                    nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
                         isValidMove = !isValidMove;
                 }
                 else{
@@ -183,9 +190,9 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                 isValidMove = !isValidMove;
             }
             checkForWinner(players+turn, &isWinner);
-        //}
     }
 }
+
 
 void initGame(Player *players, int nofPlayers, Card *upperCard) {
     playersNameInput(players,nofPlayers);
@@ -193,7 +200,11 @@ void initGame(Player *players, int nofPlayers, Card *upperCard) {
 
     for (int i = 0; i < nofPlayers; i++) {
         (players+i)->nofCards = 4;
-        // TODO: for each player malloc size of cards array to 4??
+        (players+i)->pySizeCard = 4;
+        // validate if correct
+        (players+i)->cards = (Card*)malloc((players+i)->pySizeCard * sizeof(*(players+i)->cards));
+        validateCardsMemAlloc((players+i)->cards);
+
         for (int j = 0; j < (players+i)->nofCards; j++) {
             generateRandomCard(&(players+i)->cards[j],false);
         }
@@ -272,7 +283,6 @@ int cardInput(int nofCards, bool isTaki) {
     printf("or 1-%d if you want to put one of your cards in the middle:\n", nofCards);
     scanf("%d", &number);
 
-
     return number;
 }
 
@@ -301,6 +311,33 @@ void printCard(Card card) {
         printf("\n");
     }
     printf("\n");
+}
+
+
+void TakeCard(Player *player) {
+    Card *temp;
+
+    if(player->pySizeCard == player->nofCards){
+        player->pySizeCard *=2;
+        temp = (Card*)malloc(player->pySizeCard * sizeof (*temp));
+
+        for (int i=0 ; i < player->nofCards ; i++){
+            temp[i] = player->cards[i];
+        }
+
+        free(player->cards);
+        player->cards = temp;
+    }
+    generateRandomCard(&((player)->cards[((player)->nofCards)++]), false);
+
+    temp = (Card*)malloc(player->nofCards * sizeof (*temp));
+
+    for (int i=0 ; i < player->nofCards ; i++){
+        temp[i] = player->cards[i];
+    }
+
+    free(player->cards);
+    player->cards = temp;
 }
 
 void generateRandomCard(Card *card, bool isUpperCard) {
@@ -376,6 +413,7 @@ char getColor(int num) {
             break;
 
         default:
+            // check this on color card
             cardColor='\0';
             break;
     }
@@ -398,17 +436,25 @@ void playersNameInput(Player *players, int nofPlayers) {
 }
 
 void nofPlayersInput(int *nofPlayers) {
-    //int players;
     printf("Please enter the number of players: \n");
     scanf("%d", nofPlayers);
-    //return players;
 }
 
 void validatePlayersMemAlloc(Player *players) {
     if(players == NULL){
-        printf("OOPS Something went wrong with memory allocation!!!\n");
-        exit(1);
+        memoryAllocFail();
     }
+}
+
+void validateCardsMemAlloc(Card *cards) {
+    if(cards == NULL){
+        memoryAllocFail();
+    }
+}
+
+void memoryAllocFail() {
+    printf("OOPS Something went wrong with memory allocation!!!\n");
+    exit(1);
 }
 
 void printWelcomeMessage() {
