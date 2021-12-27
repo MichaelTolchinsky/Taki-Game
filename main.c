@@ -20,11 +20,10 @@
 #define TAKI "TAKI" // "TAKI" represented by number 14
 #define CARD_COLS 9
 #define CARD_ROWS 6
-#define MAX_NAME_LEN 20
+#define MAX_NAME_LEN 20 // max name length
 
 typedef struct card {
-    //char value[10]; // (1-9 ,+, STOP, <->,COLOR, TAKI )
-    int value;
+    int value; // (1-9 ,+, STOP, <->,COLOR, TAKI )
     char color;
 } Card;
 
@@ -35,7 +34,7 @@ typedef struct player {
 } Player;
 
 void printWelcomeMessage();
-int nofPlayersInput();
+void nofPlayersInput(int *nofPlayers);
 void playersNameInput(Player *players, int nofPlayers);
 int getRandomNumber(int from,int to);
 void generateRandomCard(Card *card, bool isUpperCard);
@@ -45,14 +44,15 @@ char getColor(int num);
 void printCardValue(Card card);
 void playGame(Player *players, int nofPlayers, Card *upperCard);
 void printUpperCard(Card *upperCard);
-void playerActionInput(int *playerAction, int nofCards, bool *isTaki);
+void playerActionInput(int *playerAction, int nofCards, bool isTaki);
+int cardInput(int nofCards, bool isTaki);
 void nextPlayerTurn(int *currentTurn, int nofPlayers, bool isTaki, bool reverse);
 void printPlayerHand(Player *player);
 void playCard(Player *players, Card *upperCard, int turn, int playerAction);
 void checkForWinner(Player *player, bool *isWinner);
 void chooseNewColor(char *color);
 
-int cardInput(int nofCards, bool *isTaki);
+void validatePlayersMemAlloc(Player *players);
 
 void main() {
     int nofPlayers;
@@ -61,29 +61,27 @@ void main() {
 
     srand(time(NULL));
     printWelcomeMessage();
-    nofPlayers = nofPlayersInput();
+    nofPlayersInput(&nofPlayers);
     players = (Player*)malloc(nofPlayers * sizeof(*players));
-    playersNameInput(players,nofPlayers);
+    validatePlayersMemAlloc(players);
 
     initGame(players,nofPlayers,&upperCard);
     playGame(players,nofPlayers,&upperCard);
 
-    // move to clean function later if needed
     free(players);
 }
 
 // separate to helper functions == make this shorter
 void playGame(Player *players, int nofPlayers, Card *upperCard) {
-    bool isWinner = false,isValidMove = false,isTaki=false,isReverseTurns = false;
+    bool isWinner = false,isValidMove = false,isTaki= false,isReverseTurns = false;
     int turn = 0,playerAction;
 
     while(!isWinner){
-        for (; turn < nofPlayers;) {
-            printUpperCard(upperCard);
-            printPlayerHand(players + turn);
-
             while(!isValidMove){
-                playerActionInput(&playerAction, (players + turn)->nofCards, &isTaki);
+                printUpperCard(upperCard);
+                printPlayerHand(players + turn);
+                playerActionInput(&playerAction, (players + turn)->nofCards, isTaki);
+
                 if(playerAction == 0){
                         generateRandomCard(&((players + turn)->cards[((players + turn)->nofCards)++]), false);
                         nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
@@ -122,7 +120,6 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                     else if((players+turn)->cards[playerAction-1].value == 12 &&
                             (players+turn)->cards[playerAction-1].color == upperCard->color){
                         playCard(players,upperCard,turn,playerAction);
-                        // TODO: change game direction
                         isReverseTurns = !isReverseTurns;
                         nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
                         isValidMove = !isValidMove;
@@ -134,11 +131,47 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                         playCard(players, upperCard, turn, playerAction);
                         nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
                         isValidMove = !isValidMove;
-                        // Taki card TODO: needs to be improved
+                        // Taki
                     }else if ((players+turn)->cards[playerAction-1].value == 14 &&
                             (players+turn)->cards[playerAction-1].color == upperCard->color){
                         isTaki = true;
                         playCard(players, upperCard, turn, playerAction);
+
+                        while(isTaki){
+                            printUpperCard(upperCard);
+                            printPlayerHand(players + turn);
+                            playerActionInput(&playerAction, (players + turn)->nofCards, isTaki);
+                            if((players+turn)->cards[playerAction-1].color == upperCard->color){
+                                playCard(players, upperCard, turn, playerAction);
+                                if(playerAction == 13){
+                                    nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                                }
+                            }
+
+                            if(playerAction == 0 || (players+turn)->nofCards == 0){
+                                if(upperCard->value == 10){
+                                    generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
+                                }
+                                if(upperCard->value == 11 && nofPlayers == 2 && (players+turn)->nofCards == 0){
+                                    generateRandomCard(&((players+turn)->cards[((players+turn)->nofCards)++]),false);
+                                }
+                                if(upperCard->value == 12){
+                                    isReverseTurns = !isReverseTurns;
+                                }
+                                if(upperCard->value == 13){
+                                    chooseNewColor(&(players+turn)->cards[playerAction-1].color);
+                                }
+
+                                if((players+turn)->nofCards == 0){
+                                    isWinner=true;
+                                }
+                                isTaki = false;
+                            }
+                        }
+
+                        if(!isWinner){
+                            nextPlayerTurn(&turn, nofPlayers, isTaki, isReverseTurns);
+                        }
                         isValidMove = !isValidMove;
                     }
                     else {
@@ -146,8 +179,23 @@ void playGame(Player *players, int nofPlayers, Card *upperCard) {
                     }
                 }
             }
-            isValidMove = !isValidMove;
-            checkForWinner(players, &isWinner);
+            if(!isWinner){
+                isValidMove = !isValidMove;
+            }
+            checkForWinner(players+turn, &isWinner);
+        //}
+    }
+}
+
+void initGame(Player *players, int nofPlayers, Card *upperCard) {
+    playersNameInput(players,nofPlayers);
+    generateRandomCard(upperCard, true);
+
+    for (int i = 0; i < nofPlayers; i++) {
+        (players+i)->nofCards = 4;
+        // TODO: for each player malloc size of cards array to 4??
+        for (int j = 0; j < (players+i)->nofCards; j++) {
+            generateRandomCard(&(players+i)->cards[j],false);
         }
     }
 }
@@ -165,8 +213,8 @@ void chooseNewColor(char *color) {
 
 void checkForWinner(Player *player, bool *isWinner) {
     if((player)->nofCards == 0){
-        printf("The winner is... %s! Congratulations!",(player)->name);
-        *isWinner=!isWinner;
+        printf("The winner is... %s! Congratulations!\n",(player)->name);
+        *isWinner=true;
     }
 }
 
@@ -203,7 +251,7 @@ void nextPlayerTurn(int *currentTurn, int nofPlayers, bool isTaki, bool reverse)
 
 }
 
-void playerActionInput(int *playerAction, int nofCards, bool *isTaki) {
+void playerActionInput(int *playerAction, int nofCards, bool isTaki) {
     int number;
     number = cardInput(nofCards, isTaki);
 
@@ -214,9 +262,9 @@ void playerActionInput(int *playerAction, int nofCards, bool *isTaki) {
     *playerAction = number;
 }
 
-int cardInput(int nofCards, bool *isTaki) {
+int cardInput(int nofCards, bool isTaki) {
     int number;
-    if(!*isTaki){
+    if(!isTaki){
         printf("Please enter 0 if you want to take a card from the deck\n");
     } else {
         printf("Please enter 0 if you want to finish your turn\n");
@@ -224,9 +272,6 @@ int cardInput(int nofCards, bool *isTaki) {
     printf("or 1-%d if you want to put one of your cards in the middle:\n", nofCards);
     scanf("%d", &number);
 
-    if(*isTaki && number == 0) {
-        *isTaki = !*isTaki;
-    }
 
     return number;
 }
@@ -256,18 +301,6 @@ void printCard(Card card) {
         printf("\n");
     }
     printf("\n");
-}
-
-void initGame(Player *players, int nofPlayers, Card *upperCard) {
-    generateRandomCard(upperCard, true);
-
-    for (int i = 0; i < nofPlayers; i++) {
-        (players+i)->nofCards = 4;
-        // TODO: for each player malloc size of cards array to 4??
-        for (int j = 0; j < (players+i)->nofCards; j++) {
-            generateRandomCard(&(players+i)->cards[j],false);
-        }
-    }
 }
 
 void generateRandomCard(Card *card, bool isUpperCard) {
@@ -364,11 +397,18 @@ void playersNameInput(Player *players, int nofPlayers) {
     }
 }
 
-int nofPlayersInput() {
-    int players;
+void nofPlayersInput(int *nofPlayers) {
+    //int players;
     printf("Please enter the number of players: \n");
-    scanf("%d", &players);
-    return players;
+    scanf("%d", nofPlayers);
+    //return players;
+}
+
+void validatePlayersMemAlloc(Player *players) {
+    if(players == NULL){
+        printf("OOPS Something went wrong with memory allocation!!!\n");
+        exit(1);
+    }
 }
 
 void printWelcomeMessage() {
