@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -65,23 +64,20 @@ void printSpecialCStat(Stat *stat);
 void mergeSort(Stat arr[], int size);
 Stat* merge(Stat a1[], int size1, Stat a2[], int size2);
 void copyArr(Stat dest[], Stat src[], int size);
-
 void freeMemAlloc(Player *players, int nofPlayers);
-
 void initPlayers(Player *players, int nofPlayers, Stat *statistics);
-
 void initStatistics(Stat *statistics);
 
 void main() {
     int nofPlayers;
-    Player *players = NULL;
+    Player *players;
     Card upperCard;
     Stat statistics[NUMBER_OF_STATS];
 
     srand(time(NULL));
     printWelcomeMessage();
     nofPlayersInput(&nofPlayers);
-    players = (Player*)malloc(nofPlayers * sizeof(*players));
+    players = (Player*)malloc(nofPlayers * sizeof(Player));
     validatePlayersMemAlloc(players);
 
     initGame(players, nofPlayers, &upperCard, statistics);
@@ -329,7 +325,7 @@ void initPlayers(Player *players, int nofPlayers, Stat *statistics) {
     for (int i = 0; i < nofPlayers; i++) {
         (players+i)->nofCards = 4;
         (players+i)->pySizeCard = 4;
-        (players+i)->cards = (Card*)malloc((players+i)->pySizeCard * sizeof(*(players+i)->cards));
+        (players+i)->cards = (Card*)malloc((players+i)->pySizeCard * sizeof(Card));
         validateCardsMemAlloc((players+i)->cards);
 
         for (int j = 0; j < (players+i)->nofCards; j++) {
@@ -421,8 +417,8 @@ void takeCard(Player *player, Stat *statistics) {
 
     if(player->pySizeCard == player->nofCards){
         player->pySizeCard *=2;
-        temp = (Card*)malloc(player->pySizeCard * sizeof (*temp));
-
+        temp = (Card*)malloc(player->pySizeCard * sizeof (Card));
+        validateCardsMemAlloc(temp);
         for (int i=0 ; i < player->nofCards ; i++){
             temp[i] = player->cards[i];
         }
@@ -430,7 +426,9 @@ void takeCard(Player *player, Stat *statistics) {
         player->cards = temp;
     }
     generateRandomCard(&((player)->cards[((player)->nofCards)++]), false, statistics);
-    temp = (Card*)malloc(player->nofCards * sizeof (*temp));
+    temp = (Card*)malloc(player->nofCards * sizeof (Card));
+    validateCardsMemAlloc(temp);
+
     player->pySizeCard = player->nofCards;
     for (int i=0 ; i < player->nofCards ; i++){
         temp[i] = player->cards[i];
