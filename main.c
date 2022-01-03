@@ -52,7 +52,7 @@ void playerActionInput(int *playerAction, int nofCards, bool isTaki);
 int cardInput(int nofCards, bool isTaki);
 void nextPlayerTurn(int *currentTurn, int nofPlayers, bool reverse);
 void printPlayerHand(Player *player);
-void playCard(Player *players, Card *upperCard, int turn, int playerAction);
+void playCard(Player *player, Card *upperCard, int playerAction);
 void checkForWinner(Player *player, bool *isWinner);
 void chooseNewColor(char *color);
 void validatePlayersMemAlloc(Player *players);
@@ -68,10 +68,10 @@ void freeMemAlloc(Player *players, int nofPlayers);
 void initPlayers(Player *players, int nofPlayers, Stat *statistics);
 void initStatistics(Stat *statistics);
 bool isRegularCardMatch(Player *player, Card *upperCard, int playerAction);
-void playTakiWaterfall(Player *players, int nofPlayers, Card *upperCard, Stat *statistics, int turn, bool *isWinner,
-                       bool *isTaki, bool *isReverseTurns, int *playerAction);
-void putCardOnTable(Player *players, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isValidMove,
-               bool *isTaki, bool *isReverseTurns, int *turn, int *playerAction);
+void playTakiWaterfall(Player *player, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isTaki,
+                       bool *isReverseTurns, int *playerAction);
+void putCardOnTable(Player *player, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isValidMove,
+                    bool *isTaki, bool *isReverseTurns, int *turn, int *playerAction);
 
 void main() {
     int nofPlayers;
@@ -218,7 +218,7 @@ void playGame(Player *players, int nofPlayers, Card *upperCard, Stat *statistics
                     isValidMove = !isValidMove;
                 }
                 else{
-                    putCardOnTable(players, nofPlayers, upperCard, statistics, &isWinner, &isValidMove, &isTaki,
+                    putCardOnTable(players+turn, nofPlayers, upperCard, statistics, &isWinner, &isValidMove, &isTaki,
                                    &isReverseTurns, &turn,
                                    &playerAction);
                 }
@@ -228,63 +228,64 @@ void playGame(Player *players, int nofPlayers, Card *upperCard, Stat *statistics
             }
             checkForWinner(players+turn, &isWinner);
     }
+
     freeMemAlloc(players, nofPlayers);
 }
 
 // function that handles player choice to play a card (put card on table)
-void putCardOnTable(Player *players, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isValidMove,
-               bool *isTaki, bool *isReverseTurns, int *turn, int *playerAction) {
+void putCardOnTable(Player *player, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isValidMove,
+                    bool *isTaki, bool *isReverseTurns, int *turn, int *playerAction) {
     // regular card
-    if (isRegularCardMatch(players + (*turn), upperCard, (*playerAction))){
-        playCard(players, upperCard, (*turn), (*playerAction));
+    if (isRegularCardMatch(player, upperCard, (*playerAction))){
+        playCard(player, upperCard, (*playerAction));
         nextPlayerTurn(turn, nofPlayers, (*isReverseTurns));
         (*isValidMove) = !(*isValidMove);
     }
     // plus
-    else if((players + (*turn))->cards[(*playerAction) - 1].value == 10 &&
-              (players + (*turn))->cards[(*playerAction) - 1].color == upperCard->color){
-        playCard(players, upperCard, (*turn), (*playerAction));
-        if((players + (*turn))->nofCards == 1){
-            takeCard(players + (*turn), statistics);
+    else if((player)->cards[(*playerAction) - 1].value == 10 &&
+            (player)->cards[(*playerAction) - 1].color == upperCard->color){
+        playCard(player, upperCard, (*playerAction));
+        if((player)->nofCards == 1){
+            takeCard(player , statistics);
         }
         (*isValidMove) = !(*isValidMove);
     }
     // stop card
-    else if((players + (*turn))->cards[(*playerAction) - 1].value == 11 &&
-            (players + (*turn))->cards[(*playerAction) - 1].color == upperCard->color){
-        if(nofPlayers == 2 && (players + (*turn))->nofCards == 1){
-            takeCard(players + (*turn), statistics);
+    else if((player)->cards[(*playerAction) - 1].value == 11 &&
+            (player)->cards[(*playerAction) - 1].color == upperCard->color){
+        if(nofPlayers == 2 && (player)->nofCards == 1){
+            takeCard(player, statistics);
         }
-        playCard(players, upperCard, (*turn), (*playerAction));
+        playCard(player, upperCard, (*playerAction));
         (*turn)++;
         nextPlayerTurn(turn, nofPlayers, (*isReverseTurns));
         (*isValidMove) = !(*isValidMove);
     }
     // change-dir
-    else if((players + (*turn))->cards[(*playerAction) - 1].value == 12 &&
-            (players + (*turn))->cards[(*playerAction) - 1].color == upperCard->color){
-        playCard(players, upperCard, (*turn), (*playerAction));
+    else if((player)->cards[(*playerAction) - 1].value == 12 &&
+            (player)->cards[(*playerAction) - 1].color == upperCard->color){
+        playCard(player, upperCard, (*playerAction));
         (*isReverseTurns) = !(*isReverseTurns);
         nextPlayerTurn(turn, nofPlayers, (*isReverseTurns));
         (*isValidMove) = !(*isValidMove);
     }
     // change color
-    else if((players + (*turn))->cards[(*playerAction) - 1].value == 13){
+    else if((player)->cards[(*playerAction) - 1].value == 13){
         (*isTaki) = false;
-        chooseNewColor(&(players + (*turn))->cards[(*playerAction) - 1].color);
-        playCard(players, upperCard, (*turn), (*playerAction));
+        chooseNewColor(&(player)->cards[(*playerAction) - 1].color);
+        playCard(player, upperCard, (*playerAction));
         nextPlayerTurn(turn, nofPlayers, (*isReverseTurns));
         (*isValidMove) = !(*isValidMove);
     }
     // Taki
-    else if ((players + (*turn))->cards[(*playerAction) - 1].value == 14 &&
-             (players + (*turn))->cards[(*playerAction) - 1].color == upperCard->color){
+    else if ((player)->cards[(*playerAction) - 1].value == 14 &&
+             (player)->cards[(*playerAction) - 1].color == upperCard->color){
         (*isTaki) = true;
-        playCard(players, upperCard, (*turn), (*playerAction));
-        if((players+(*turn))->nofCards == 0){
+        playCard(player, upperCard, (*playerAction));
+        if((player)->nofCards == 0){
             *isWinner = true;
         } else {
-            playTakiWaterfall(players, nofPlayers, upperCard, statistics, (*turn), isWinner, isTaki,
+            playTakiWaterfall(player, nofPlayers, upperCard, statistics, isWinner, isTaki,
                               isReverseTurns, playerAction);
         }
 
@@ -299,41 +300,41 @@ void putCardOnTable(Player *players, int nofPlayers, Card *upperCard, Stat *stat
 }
 
 // function that handles TAKI waterfall logic
-void playTakiWaterfall(Player *players, int nofPlayers, Card *upperCard, Stat *statistics, int turn, bool *isWinner,
-                       bool *isTaki, bool *isReverseTurns, int *playerAction) {
+void playTakiWaterfall(Player *player, int nofPlayers, Card *upperCard, Stat *statistics, bool *isWinner, bool *isTaki,
+                       bool *isReverseTurns, int *playerAction) {
     while((*isTaki)){
         printUpperCard(upperCard);
-        printPlayerHand(players + turn);
-        playerActionInput(playerAction, (players + turn)->nofCards, (*isTaki));
+        printPlayerHand(player);
+        playerActionInput(playerAction, (player)->nofCards, (*isTaki));
 
-        while((players+turn)->cards[(*playerAction) - 1].color != upperCard->color && (*playerAction) != 0){
+        while((player)->cards[(*playerAction) - 1].color != upperCard->color && (*playerAction) != 0){
             printf("Invalid choice! Try again.\n");
-            playerActionInput(playerAction, (players + turn)->nofCards, (*isTaki));
+            playerActionInput(playerAction, (player)->nofCards, (*isTaki));
         }
 
-        if((players+turn)->cards[(*playerAction) - 1].color == upperCard->color){
+        if((player)->cards[(*playerAction) - 1].color == upperCard->color){
             if((*playerAction) == 13){
-                chooseNewColor(&(players+turn)->cards[(*playerAction) - 1].color);
+                chooseNewColor(&(player)->cards[(*playerAction) - 1].color);
             }
-            playCard(players, upperCard, turn, (*playerAction));
+            playCard(player, upperCard, (*playerAction));
             (*isTaki) = false;
         }
 
-        if((*playerAction) == 0 || (players + turn)->nofCards == 0){
+        if((*playerAction) == 0 || (player)->nofCards == 0){
             if(upperCard->value == 10){
-                takeCard(players + turn, statistics);
+                takeCard(player, statistics);
             }
-            if(upperCard->value == 11 && nofPlayers == 2 && (players+turn)->nofCards == 0){
-                takeCard(players + turn, statistics);
+            if(upperCard->value == 11 && nofPlayers == 2 && (player)->nofCards == 0){
+                takeCard(player , statistics);
             }
             if(upperCard->value == 12){
                 (*isReverseTurns) = !(*isReverseTurns);
             }
             if(upperCard->value == 13){
-                chooseNewColor(&(players+turn)->cards[(*playerAction) - 1].color);
+                chooseNewColor(&(player)->cards[(*playerAction) - 1].color);
             }
 
-            if((players+turn)->nofCards == 0){
+            if((player)->nofCards == 0){
                 (*isWinner) =true;
             }
             (*isTaki) = false;
@@ -401,10 +402,10 @@ void checkForWinner(Player *player, bool *isWinner) {
 }
 
 // function that updates the upper card to the card that the player put on the table and updates the player's cards array
-void playCard(Player *players, Card *upperCard, int turn, int playerAction) {
-    *upperCard = (players + turn)->cards[playerAction - 1];
-    (players+turn)->cards[playerAction-1] = (players+turn)->cards[(players+turn)->nofCards-1];
-    (players+turn)->nofCards--;
+void playCard(Player *player, Card *upperCard, int playerAction) {
+    *upperCard = (player)->cards[playerAction - 1];
+    (player)->cards[playerAction - 1] = (player)->cards[(player)->nofCards - 1];
+    (player)->nofCards--;
 }
 
 // function that prints all cards that the player has
