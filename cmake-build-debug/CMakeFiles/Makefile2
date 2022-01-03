@@ -54,15 +54,16 @@ RM = /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject
+CMAKE_SOURCE_DIR = "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug
+CMAKE_BINARY_DIR = "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug"
 
 #=============================================================================
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/main.dir/all
 all: CMakeFiles/TakiProject.dir/all
 .PHONY : all
 
@@ -71,8 +72,35 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/main.dir/clean
 clean: CMakeFiles/TakiProject.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/main.dir
+
+# All Build rule for target.
+CMakeFiles/main.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" --progress-num=3,4 "Built target main"
+.PHONY : CMakeFiles/main.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/main.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/main.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" 0
+.PHONY : CMakeFiles/main.dir/rule
+
+# Convenience name for target.
+main: CMakeFiles/main.dir/rule
+.PHONY : main
+
+# clean rule for target.
+CMakeFiles/main.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/clean
+.PHONY : CMakeFiles/main.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/TakiProject.dir
@@ -81,14 +109,14 @@ clean: CMakeFiles/TakiProject.dir/clean
 CMakeFiles/TakiProject.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TakiProject.dir/build.make CMakeFiles/TakiProject.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TakiProject.dir/build.make CMakeFiles/TakiProject.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target TakiProject"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" --progress-num=1,2 "Built target TakiProject"
 .PHONY : CMakeFiles/TakiProject.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/TakiProject.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/TakiProject.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" 0
 .PHONY : CMakeFiles/TakiProject.dir/rule
 
 # Convenience name for target.

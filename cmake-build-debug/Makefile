@@ -57,10 +57,10 @@ RM = /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject
+CMAKE_SOURCE_DIR = "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug
+CMAKE_BINARY_DIR = "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug"
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug//CMakeFiles/progress.marks"
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles" 0
 .PHONY : all
 
 # The main clean target
@@ -117,6 +117,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named main
+
+# Build rule for target.
+main: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
+.PHONY : main
+
+# fast build rule for target.
+main/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
+.PHONY : main/fast
+
+#=============================================================================
 # Target rules for targets named TakiProject
 
 # Build rule for target.
@@ -134,6 +147,7 @@ main.o: main.c.o
 
 # target to build an object file
 main.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TakiProject.dir/build.make CMakeFiles/TakiProject.dir/main.c.o
 .PHONY : main.c.o
 
@@ -142,6 +156,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TakiProject.dir/build.make CMakeFiles/TakiProject.dir/main.c.i
 .PHONY : main.c.i
 
@@ -150,6 +165,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TakiProject.dir/build.make CMakeFiles/TakiProject.dir/main.c.s
 .PHONY : main.c.s
 
@@ -162,6 +178,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... TakiProject"
+	@echo "... main"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

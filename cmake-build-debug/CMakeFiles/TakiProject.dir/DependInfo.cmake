@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/main.c" "/Users/michaeltol/Desktop/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles/TakiProject.dir/main.c.o"
+  "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/main.c" "/Users/michaeltol/Library/Mobile Documents/com~apple~CloudDocs/College/intro-to-cs/TakiProject/cmake-build-debug/CMakeFiles/TakiProject.dir/main.c.o"
   )
 set(CMAKE_C_COMPILER_ID "AppleClang")
 
